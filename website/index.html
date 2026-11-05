@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        MFH
+    </title>
+    <meta id="description" name="description" content="Listen to all episodes of the classic radio show My Favorite Husband without distractions.">
+    <link rel="stylesheet" href="./assets/css/tailwind.css">
+</head>
+
+<body class="font-mono">
+    <header>
+        <a href="#scroll_main">
+            <div class="bg-black/80">
+                <div class="h-16"></div>
+                <h1 class="text-center font-black text-white">
+                    My Favorite Husband
+                </h1>
+                <div class="h-16"></div>
+            </div>
+        </a>
+    </header>
+    <main class="min-h-lvh" id="scroll_main">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-1">
+
+            <div class="aspect-square bg-black/20">
+                <audio id="mp3_source" crossorigin="anonymous"></audio>
+                <div class="h-16"></div>
+                <div class="grid grid-cols-1 gap-16">
+                    <div class="">
+                        <canvas class="w-full" id="oscilloscope" height="128" width="1024"></canvas>
+                    </div>
+                    <div class="grid grid-cols-2 place-content-stretch gap-8 px-2">
+                        <button
+                            class="shadow-sm shadow-black text-lg font-black bg-black/20 border-b-16 border-b-black/40 border-l-8 border-l-black/20 p-4 rounded"
+                            id="mp3_play_button">play</button>
+                        <button
+                            class="shadow-sm shadow-black  text-lg font-black bg-black/20 border-b-16 border-b-black/40 border-l-8 border-l-black/20 p-4 rounded"
+                            id="mp3_pause_button">pause</button>
+                    </div>
+                    <div class="px-2">
+                        <p>
+                            seek
+                        </p>
+                        <input class="w-full accent-amber-200" type="range" id="seek_slider" min="0" max="1" value="0"
+                            step="0.001" />
+                    </div>
+                    <div class="px-2">
+                        <p>
+                            volume
+                        </p>
+                        <input class="w-full accent-fuchsia-200" type="range" id="volume_slider" min="0" max="1.4"
+                            value="0.4" step="0.01" />
+                    </div>
+                    <div class="px-2">
+                        <p>
+                            pan
+                        </p>
+                        <input class="w-full accent-lime-200" type="range" id="panner_slider" min="-1" max="1" value="0"
+                            step="0.01" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="aspect-square bg-black/20 p-1">
+                <h2 class="text-center">
+                    select an episode
+                </h2>
+                <div class="grid grid-cols-11 gap-2">
+                    <button id="button_template"
+                        class="cursor-pointer bg-black/10 aspect-square rounded grid grid-cols-1 place-items-center">
+                        <p class="bg-amber-200 rounded-full p-2 text-lg">
+                            000
+                        </p>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+    <footer class="text-center">
+        <div class="grid grid-cols-4">
+            <img src="./assets/img/ca_115_square.png">
+            <img src="./assets/img/ca_115_square.png">
+            <img src="./assets/img/ca_115_square.png">
+            <img src="./assets/img/ca_115_square.png">
+        </div>
+        <div class="bg-black text-white">
+            <a href="https://kingbook.org">King Book Independent Web Library</a>
+        </div>
+        <div class="grid grid-cols-4">
+            <img src="./assets/img/ca_115_square.png">
+            <img src="./assets/img/ca_115_square.png">
+            <img src="./assets/img/ca_115_square.png">
+            <img src="./assets/img/ca_115_square.png">
+        </div>
+    </footer>
+    <script type="module">
+        // use an image or recording to create a wavetable
+        // use wavetable to create oscillator
+        // save oscillators for reuse as instruments
+        //
+        // record audio and edit to save as an instrument
+        // 
+        // just export for use elsewhere? Or have a simple way to play things?
+        // use saved instruments in sequencer or play from live pad
+        // maybe can encapsulate sequences to save as new instruments
+        // 
+
+        const par_bucket_url = "https://objectstorage.us-sanjose-1.oraclecloud.com/p/12irtiDQTYcNNcIbZ3WfLtMMI6Wa-5VBcrAtT_RipnS5wcQ2Em313yx3SAJftLR9/n/axxswuqol1gk/b/kingbook-audio-mfh/o/"
+        const audio_sources = [
+            "Mfh1948-07-05000cooperauditionGeorgesOldFlameaka1948-10-03GeorgesOldFlameakaCoopers10thWedAnniv.mp3",
+            "Mfh1948-07-23001afrtscugatLiteraryClubsSpeakerComesToDinner.mp3",
+            "Mfh1948-07-23002afrtsMothersSurprise.mp3",
+            "Mfh1948-08-06003afrtsThePortraitArtist.mp3",
+            "Mfh1948-08-13004afrtsCharityBazaarKissingBooth.mp3",
+            "Mfh1948-08-20005afrtscooperrepeatsAt076LizTeachesTheSamba.mp3",
+            "Mfh1948-09-03007afrtsLizsMotherHas2ndThoughts.mp3",
+            "Mfh1948-09-10008afrtsLizHasHerFortuneTold.mp3",
+            "Mfh1948-09-17009afrtsGeneralMrsTimberlakeakaLizTheGeneral.mp3",
+            "Mfh1948-09-24010afrtsKnittingBabyBooties.mp3",
+            "Mfh1948-10-02011cugatrepeatsAt025YoungMatronsLeagueTryouts.mp3",
+            "Mfh1948-10-09013afrtsYoungMatronsLeagueGame.mp3",
+            "Mfh1948-10-16014afrtsLizSellsDresses.mp3",
+            "Mfh1948-10-23015afrtsrepeatsAt064TheQuizShow.mp3",
+            "Mfh1948-11-06017afrtsKatyRoscoe.mp3",
+            "Mfh1948-11-13018afrtsLearningToDrive.mp3",
+            "Mfh1948-11-20019afrtsGeorgeAttendsATeen-ageDance.mp3",
+            "Mfh1948-11-27020afrtsIsThereABabyInTheHouse.mp3",
+            "Mfh1948-12-04021afrtsBeYourHusbandsBestFriend.mp3",
+            "Mfh1948-12-18023afrtsLizsNewDress.mp3",
+            "Mfh1948-12-25024afrts1950-05-14088Numerology.mp3",
+            "Mfh1949-01-01025WrongDatecugatrepeat011YoungMatronsLeagueTryouts.mp3",
+            "Mfh1949-01-07026OverBudget-Beans.mp3",
+            "Mfh1949-01-14027afrtsPianoViolinLessons.mp3",
+            "Mfh1949-01-21028afrtsMarriageLicenseError.mp3",
+            "Mfh1949-01-28029TheAbsoluteTruth.mp3",
+            "Mfh1949-02-04030SpeechForCivicOrganization.mp3",
+            "Mfh1949-02-11031ValentinesDay.mp3",
+            "Mfh1949-02-18032afrtsSecretarialSchool.mp3",
+            "Mfh1949-02-25033Absentmindedness.mp3",
+            "Mfh1949-03-04034Mother-in-lawgeorgesMother.mp3",
+            "Mfh1949-03-11035afrtscooper-CharityReview.mp3",
+            "Mfh1949-04-01038afrtsAprilFoolsDay.mp3",
+            "Mfh1949-04-08039GumMachine-DemandYourRights.mp3",
+            "Mfh1949-04-15040HorsebackRiding.mp3",
+            "Mfh1949-04-22041afrtsTimeBudgeting.mp3",
+            "Mfh1949-04-29042afrtscooperVacationTime.mp3",
+            "Mfh1949-05-06043Overweight.mp3",
+            "Mfh1949-05-13044afrtsrepeatsAt084AnniversaryakaAnniversaryPresents.mp3",
+            "Mfh1949-05-20045afrtsGettingOld.mp3",
+            "Mfh1949-05-27046afrtsLizInTheHospital.mp3",
+            "Mfh1949-06-10048HairDyed.mp3",
+            "Mfh1949-06-17049afrtsTelevisionakaGeoBreaksNeighborsTelevision.mp3",
+            "Mfh1949-06-24050afrtsLizChangesHerMind.mp3",
+            "Mfh1949-07-01051ReminiscingakaLizGeorgeReminisce.mp3",
+            "Mfh1949-09-02052TheElves.mp3",
+            "Mfh1949-09-16054Baseball.mp3",
+            "Mfh1949-09-23055afrtsTheAtticakaLockedInTheAttic.mp3",
+            "Mfh1949-09-30056WomensClubElection.mp3",
+            "Mfh1949-10-07057afrtsGeorgeTriesForARaise.mp3",
+            "Mfh1949-10-14058afrtsTelevisionakaOrderingTvSetpoorSnd.mp3",
+            "Mfh1949-10-21059Superstition.mp3",
+            "Mfh1949-10-28060HalloweenSurpriseParty.mp3",
+            "Mfh1949-11-04061afrtsMother-in-law2.mp3",
+            "Mfh1949-11-11062Babysitting.mp3",
+            "Mfh1949-11-18063afrtsKatyMr.Negley.mp3",
+            "Mfh1949-11-25064repeat015QuizShow.mp3",
+            "Mfh1949-12-02065afrtsCollegeHomecoming.mp3",
+            "Mfh1949-12-09066TheFrenchLessons.mp3",
+            "Mfh1949-12-16067ChristmasGiftakaGeorgesXmasPresents.mp3",
+            "Mfh1949-12-23068TheSleighRide.mp3",
+            "Mfh1949-12-30069LizGeorgeAreHandcuffed.mp3",
+            "Mfh1950-01-06070IsThereAnotherWoman.mp3",
+            "Mfh1950-01-13071LizTeachesIrisToDrive.mp3",
+            "Mfh1950-01-20072LizTheGreenWig.mp3",
+            "Mfh1950-01-27073afrtsLizWritesASong.mp3",
+            "Mfh1950-02-03074afrtsCountryClubDance.mp3",
+            "Mfh1950-02-10075afrtscooperMrs.coopersBoyfriend.mp3",
+            "Mfh1950-02-17076repeat005LizTeachesSamba.mp3",
+            "Mfh1950-02-24077afrtsLizRedecoratesTheHouse.mp3",
+            "Mfh1950-03-03078CbsBulletin-WomensRightsPt1.mp3",
+            "Mfh1950-03-10079WomensRightsPt2.mp3",
+            "Mfh1950-03-17080TheWills.mp3",
+            "Mfh1950-03-24081LizsRadioScript.mp3",
+            "Mfh1950-04-09083afrtsHusbandsHobbiesakaHobbies.mp3",
+            "Mfh1950-04-16084afrtsrepeat044AnniversaryakaAnniversaryPresents.mp3",
+            "Mfh1950-04-23085LizAppearsOnTelevisionakaFriendshipAward.mp3",
+            "Mfh1950-04-30086SpringHouseCleaningakaSpringCleaning.mp3",
+            "Mfh1950-05-14088repeat024Numerology.mp3",
+            "Mfh1950-05-28090SellingDresses.mp3",
+            "Mfh1950-06-04091GeorgeIsMessy.mp3",
+            "Mfh1950-06-11092LizLearnsToSwim.mp3",
+            "Mfh1950-06-18093BeAPal.mp3",
+            "Mfh1950-06-25094afrtsDanceLessons.mp3",
+            "Mfh1950-09-02095OldClothesSoldToJunkman.mp3",
+            "Mfh1950-09-09096afrtsGossip.mp3",
+            "Mfh1950-09-30099afrtsLizChangesHerMind.mp3",
+            "Mfh1950-10-07100LizBecomesASculptress.mp3",
+            "Mfh1950-10-14101LizCooksDinnerFor12.mp3",
+            "Mfh1950-10-21102afrtsSafetyDrive.mp3",
+            "Mfh1950-10-28103afrtsTheFootballGamelizIris.mp3",
+            "Mfh1950-11-04104afrtscooperTheTwoMrsCoopers.mp3",
+            "Mfh1950-11-18106afrtsLizGoesToNightSchool.mp3",
+            "Mfh1950-11-25107LizsBirthday.mp3",
+            "Mfh1950-12-02108afrtsTryingToMarryOffPeggyMartin.mp3",
+            "Mfh1950-12-09109TryingToCashThePrizeCheck.mp3",
+            "Mfh1950-12-16110ChristmasCardPictures.mp3",
+            "Mfh1950-12-23111ChristmasStag.mp3",
+            "Mfh1950-12-30112LizHasTheFlimjabs.mp3",
+            "Mfh1951-01-06113LizSubstitutesAtClubPlay.mp3",
+            "Mfh1951-01-13114TheCuckooClock.mp3",
+            "Mfh1951-01-20115afrtsLizStretchesTheTruth.mp3",
+            "Mfh1951-01-27116GeorgeIsDrafted-LizsBaby.mp3",
+            "Mfh1951-02-03117afrtsLizDevelopsInferiorityComplex.mp3",
+            "Mfh1951-02-10118afrtsTheMisunderstandingOfTheBlackEye.mp3",
+            "Mfh1951-02-24120The2Mothers-in-lawakaDecoyDucks.mp3",
+            "Mfh1951-03-03121ThePassports.mp3",
+            "Mfh1951-03-10122afrtsTheSurpriseParty.mp3",
+            "Mfh1951-03-24124IrisLizsEaster.mp3",
+        ]
+
+        var current_audio_source_idx = 0
+        var current_audio_source = `${par_bucket_url}${audio_sources[current_audio_source_idx]}`
+        const audio_context = new AudioContext()
+
+        const mp3_play_button = document.getElementById("mp3_play_button")
+        mp3_play_button.addEventListener("click", handle_play)
+
+        const mp3_pause_button = document.getElementById("mp3_pause_button")
+        mp3_pause_button.addEventListener("click", handle_pause)
+
+        const volume_control = document.getElementById("volume_slider")
+        volume_control.addEventListener("input", handle_volume_input)
+
+        const panner_control = document.getElementById("panner_slider")
+        panner_control.addEventListener("input", handle_pan_input)
+
+        const seek_control = document.getElementById("seek_slider")
+        seek_control.addEventListener("input", handle_seek_input)
+
+        add_episode_select_buttons()
+
+        // create a gain node
+        const gain_node = audio_context.createGain()
+
+        // create a panner node
+        const panner_node = audio_context.createStereoPanner()
+
+        // get the audio element
+        const mp3_source = document.getElementById("mp3_source")
+        mp3_source.src = current_audio_source
+        mp3_source.addEventListener("ended", mp3_ended_callback)
+        mp3_source.addEventListener("timeupdate", time_update_callback)
+
+        // pass audio element into the audio context
+        const track = audio_context.createMediaElementSource(mp3_source)
+
+        // build the node graph
+        track.connect(gain_node).connect(panner_node).connect(audio_context.destination)
+
+
+        // analyser logic
+
+        const analyser = audio_context.createAnalyser();
+        analyser.fftSize = 128;
+
+        const buffer_length = analyser.frequencyBinCount;
+        const domain_data_array = new Uint8Array(buffer_length);
+        analyser.getByteTimeDomainData(domain_data_array);
+
+        // Connect the source to be analyzed
+        track.connect(analyser);
+
+        // Get a canvas defined with ID "oscilloscope"
+        const canvas = document.getElementById("oscilloscope");
+        const canvas_ctx = canvas.getContext("2d");
+
+        // draw an oscilloscope of the current audio source
+
+        function draw() {
+            requestAnimationFrame(draw);
+
+            analyser.getByteTimeDomainData(domain_data_array);
+
+            canvas_ctx.fillStyle = "rgba(128, 128, 128, 0.04)";
+            canvas_ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            canvas_ctx.lineWidth = 2;
+            canvas_ctx.strokeStyle = "rgba(32, 32, 32, 0.8)";
+
+            canvas_ctx.beginPath();
+
+            const slice_width = (canvas.width * 1.0) / buffer_length;
+            let x = 0;
+
+            for (let i = 0; i < buffer_length; i++) {
+                const v = domain_data_array[i] / 128.0;
+                const y = (v * canvas.height) / 2;
+
+                if (i === 0) {
+                    canvas_ctx.moveTo(x, y);
+                } else {
+                    canvas_ctx.lineTo(x, y);
+                }
+
+                x += slice_width;
+            }
+
+            canvas_ctx.lineTo(canvas.width, canvas.height / 2);
+            canvas_ctx.stroke();
+        }
+
+        draw();
+
+        function add_episode_select_buttons() {
+            const button_template = document.getElementById("button_template")
+
+            for (let i = 0; i < audio_sources.length; i++) {
+                const button_element = button_template.cloneNode(true)
+                button_element.id = `button_${i}`
+                const button_text_p = button_element.querySelector('p')
+                button_text_p.innerText = String(i).padStart(3, 0)
+                if (i == 0) {
+                    button_text_p.classList.remove("bg-amber-200")
+                    button_text_p.classList.add("bg-lime-200")
+                }
+                // add click event listener
+                button_element.addEventListener("click", (event) => {
+                    handle_select_episode(event, i)
+                })
+                button_template.before(button_element)
+            }
+
+            button_template.remove()
+        }
+
+        function handle_play(event) {
+            if (audio_context.state === "suspended") {
+                audio_context.resume()
+                console.log("resume")
+            }
+            mp3_source.play()
+
+        }
+
+        function handle_pause(event) {
+            mp3_source.pause()
+        }
+
+        function handle_volume_input(event) {
+            gain_node.gain.value = volume_control.value
+        }
+
+        function handle_pan_input(event) {
+            panner_node.pan.value = panner_control.value
+        }
+
+        function mp3_ended_callback(event) {
+            console.log("mp3 has finished :: ", event)
+            let new_source_idx = current_audio_source_idx
+            if (current_audio_source_idx < audio_sources.length - 1) {
+                new_source_idx++
+            } else {
+                new_source_idx = 0
+            }
+            handle_select_episode(event, new_source_idx)
+        }
+
+        function handle_select_episode(event, source_idx) {
+            const previous_button_element = document.getElementById(`button_${current_audio_source_idx}`)
+            const previous_button_text_p = previous_button_element.querySelector('p')
+            previous_button_text_p.classList.remove("bg-amber-200")
+            previous_button_text_p.classList.remove("bg-lime-200")
+            previous_button_text_p.classList.add("bg-fuchsia-200")
+
+            const button_element = document.getElementById(`button_${source_idx}`)
+            const button_text_p = button_element.querySelector('p')
+            button_text_p.classList.remove("bg-amber-200")
+            button_text_p.classList.remove("bg-fuchsia-200")
+            button_text_p.classList.add("bg-lime-200")
+
+            console.log(source_idx)
+            current_audio_source_idx = source_idx
+            current_audio_source = `${par_bucket_url}${audio_sources[current_audio_source_idx]}`
+            mp3_source.src = current_audio_source
+            mp3_source.currentTime = 0
+            mp3_source.play()
+
+        }
+
+        function time_update_callback(event) {
+            seek_control.value = mp3_source.currentTime / mp3_source.duration
+            //console.log(seek_control.value, mp3_source.currentTime, mp3_source.duration)
+        }
+
+        function handle_seek_input(event) {
+            mp3_source.currentTime = seek_control.value * mp3_source.duration
+        }
+
+        function oscillator(event) {
+            let osc1_frequency = 60
+            if (audio_context.state === "suspended") {
+                audio_context.resume()
+                console.log("resume")
+            }
+            const oscillator_1 = new OscillatorNode(
+                audio_context,
+                {
+                    type: "sine",
+                    frequency: 120,
+                }
+            )
+            oscillator_1.connect(audio_context.destination)
+            console.log(event)
+            oscillator_1.start()
+            console.log("start")
+            //oscillator_1.stop(2)
+
+        }
+
+
+
+    </script>
+</body>
+
+</html>
