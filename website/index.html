@@ -100,16 +100,6 @@
         </div>
     </footer>
     <script type="module">
-        // use an image or recording to create a wavetable
-        // use wavetable to create oscillator
-        // save oscillators for reuse as instruments
-        //
-        // record audio and edit to save as an instrument
-        // 
-        // just export for use elsewhere? Or have a simple way to play things?
-        // use saved instruments in sequencer or play from live pad
-        // maybe can encapsulate sequences to save as new instruments
-        // 
 
         const par_bucket_url = "https://objectstorage.us-sanjose-1.oraclecloud.com/p/12irtiDQTYcNNcIbZ3WfLtMMI6Wa-5VBcrAtT_RipnS5wcQ2Em313yx3SAJftLR9/n/axxswuqol1gk/b/kingbook-audio-mfh/o/"
         const audio_sources = [
@@ -401,29 +391,6 @@
         function handle_seek_input(event) {
             mp3_source.currentTime = seek_control.value * mp3_source.duration
         }
-
-        function oscillator(event) {
-            let osc1_frequency = 60
-            if (audio_context.state === "suspended") {
-                audio_context.resume()
-                console.log("resume")
-            }
-            const oscillator_1 = new OscillatorNode(
-                audio_context,
-                {
-                    type: "sine",
-                    frequency: 120,
-                }
-            )
-            oscillator_1.connect(audio_context.destination)
-            console.log(event)
-            oscillator_1.start()
-            console.log("start")
-            //oscillator_1.stop(2)
-
-        }
-
-
 
     </script>
 </body>
